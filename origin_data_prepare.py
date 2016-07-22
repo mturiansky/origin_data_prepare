@@ -42,7 +42,7 @@ def file_handler(line, filename, output_file, shift, units):
             if split_line[0] == 'Vf':
                 split_line = ['Voltage', 'Current']
             else:
-                split_line = ['V', 'uA']
+                split_line = ['V', units]
     if shift is not None and 'CV' in filename:
         try:
             split_line[0] = sci_not_format(float(split_line[0])+shift)
