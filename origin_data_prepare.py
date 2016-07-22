@@ -7,7 +7,7 @@ files for import into OriginLab
 
 from argparse import ArgumentParser
 from os.path import abspath, isdir, isfile, join
-from os import listdir
+from os import listdir, mkdir, rmdir
 from sys import exc_info
 
 def dispatcher(dirty_path):
@@ -25,10 +25,31 @@ def dispatcher(dirty_path):
     filenames = [f for f in listdir(path) if isfile(join(path, f))]
     print('[+] Found %d files' % len(filenames))
 
+    print('[*] Setting up output directory')
+    output_path = join(path, 'output_data')
+    try:
+        mkdir(output_path)
+    except FileExistsError:
+        can_delete = input('[-] Directory exists, should we delete and continue? [Y/n]: ')
+        if can_delete == 'Y' or can_delete == 'y':
+            print('[*] Deleting old directory')
+            rmdir(output_path)
+            mkdir(output_path)
+        else:
+            raise
+    print('[+] Directory created:', output_path)
+
     print('[*] Processing files')
     for f in filenames:
         with open(join(path, f), 'r') as opened_file:
-            print('\t[+] Opened', f)
+            with open(join(output_path, f), 'w') as output_file:
+                for line in opened_file:
+                    if 'CV' in f:
+                        pass
+                    elif 'LSV' in f:
+                        pass
+                    elif 'CA' in f:
+                        pass
 
 def setup_parser(parser):
     ''' adds arguments to the parser '''
