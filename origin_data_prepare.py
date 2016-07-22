@@ -118,7 +118,7 @@ def main():
                                         ' DTA files for import into OriginLab.')
     setup_parser(parser)
     args = parser.parse_args()
-    print('[+] directory_path:', args.directory_path)
+    print('[+] directory path:', args.directory_path)
     print('[+] output directory:', args.outdir)
     print('[+] units:', args.units)
     if args.shift is not None:
