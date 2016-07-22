@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 '''
 origin_data_prepare.py
 
