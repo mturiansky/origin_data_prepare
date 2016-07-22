@@ -72,8 +72,18 @@ def dispatcher(dirty_path):
     print('[*] Processing files')
     for f in filenames:
         print('[*] Current file:', f, end='\r')
+        if 'DTA' not in f:
+            continue
+            
         with open(join(path, f), 'r') as opened_file:
-            with open(join(output_path, f), 'w') as output_file:
+            if 'CV' in f:
+                output_path_filename = join(output_path, f) + 'CV'
+            elif 'CA' in f:
+                output_path_filename = join(output_path, f) + 'CA'
+            else:
+                output_path_filename = join(output_path, f)
+
+            with open(output_path_filename, 'w') as output_file:
                 for line in opened_file:
                     file_handler(line, f, output_file)
         stdout.write('\033[K')
