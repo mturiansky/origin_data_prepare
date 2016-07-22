@@ -10,6 +10,13 @@ from os.path import abspath, isdir, isfile, join
 from os import listdir, mkdir, rmdir
 from sys import exc_info
 
+def file_handler(line, filename, output_file):
+    '''
+    analyzes the input line and filename
+    and determines what to write to the output file
+    '''
+    pass
+
 def dispatcher(dirty_path):
     '''
     looks through the path for DTA files
@@ -44,12 +51,7 @@ def dispatcher(dirty_path):
         with open(join(path, f), 'r') as opened_file:
             with open(join(output_path, f), 'w') as output_file:
                 for line in opened_file:
-                    if 'CV' in f:
-                        pass
-                    elif 'LSV' in f:
-                        pass
-                    elif 'CA' in f:
-                        pass
+                    file_handler(line, f, output_file)
 
 def setup_parser(parser):
     ''' adds arguments to the parser '''
