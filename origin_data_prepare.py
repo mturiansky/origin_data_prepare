@@ -33,7 +33,7 @@ def main():
     try:
         dispatcher(args.directory_path)
     except Exception as e:
-        print('[-]', e)
+        print('[-]', e.type, e)
 
 if __name__ == '__main__':
     main()
