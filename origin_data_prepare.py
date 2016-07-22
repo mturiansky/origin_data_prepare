@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 from os.path import abspath, isdir, isfile, join
 from os import listdir, mkdir
 from shutil import rmtree
-from sys import exc_info
+from sys import exc_info, stdout
 
 import re
 
@@ -18,16 +18,25 @@ def file_handler(line, filename, output_file):
     analyzes the input line and filename
     and determines what to write to the output file
     '''
-    regex = re.compile(r'(\t[^\t\n\r\f\v]+){3,}\n')
+    regex = re.compile(r'(\t[^\t\n\r\f\v]+){8,}\n')
     if regex.match(line) is None:
         return
 
     regex = re.compile(r'\t')
-    if 'CV' in filename:
-        new_line = '\t' + '\t'.join(regex.split(line)[3:5]) + '\n'
-    else:
-        new_line = line
-    print(repr(new_line))
+    if 'CV' in filename or 'CA' in filename:
+        split_line = regex.split(line)[3:5]
+        try:
+            split_line[1] = '%.5e' % (float(split_line[1])*1000000)
+            a = split_line[1].split('e')
+            a[1] = a[1][:1] + '0' + a[1][1:]
+            split_line[1] = 'E'.join(a)
+        except ValueError:
+            if split_line[0] == 'Vf':
+                split_line = ['Voltage', 'Current']
+            else:
+                split_line = ['V', 'uA']
+    new_line = '\t' + '\t'.join(split_line) + '\n'
+    output_file.write(new_line)
 
 def dispatcher(dirty_path):
     '''
@@ -59,11 +68,14 @@ def dispatcher(dirty_path):
     print('[+] Directory created:', output_path)
 
     print('[*] Processing files')
-    for f in filenames[0:1]:
+    for f in filenames:
+        print('[*] Current file:', f, end='\r')
         with open(join(path, f), 'r') as opened_file:
             with open(join(output_path, f), 'w') as output_file:
                 for line in opened_file:
                     file_handler(line, f, output_file)
+        stdout.write('\033[K')
+    print('[+] Processing complete')
 
 def setup_parser(parser):
     ''' adds arguments to the parser '''
