@@ -15,6 +15,8 @@ from sys import exc_info, stdout
 
 import re
 
+UNIT_CONV = {'A':1, 'mA':1000, 'uA':1000000, 'nA':1000000000}
+
 def sci_not_format(num):
     ''' formats number with 5 decimal places and 3 exponent places '''
     snum = '%.5e' % num
@@ -22,7 +24,7 @@ def sci_not_format(num):
     a[1] = a[1][:1] + '0' + a[1][1:]
     return 'E'.join(a)
 
-def file_handler(line, filename, output_file, shift):
+def file_handler(line, filename, output_file, shift, units):
     '''
     analyzes the input line and filename
     and determines what to write to the output file
@@ -35,7 +37,7 @@ def file_handler(line, filename, output_file, shift):
     if 'CV' in filename or 'CA' in filename:
         split_line = regex.split(line)[3:5]
         try:
-            split_line[1] = sci_not_format(float(split_line[1])*1000000)
+            split_line[1] = sci_not_format(float(split_line[1])*UNIT_CONV[units])
         except ValueError:
             if split_line[0] == 'Vf':
                 split_line = ['Voltage', 'Current']
@@ -95,16 +97,20 @@ def dispatcher(args):
 
             with open(output_path_filename, 'w') as output_file:
                 for line in opened_file:
-                    file_handler(line, f, output_file, args.shift)
+                    file_handler(line, f, output_file, args.shift, args.units)
         stdout.write('\033[K')
     print('[+] Processing complete')
 
 def setup_parser(parser):
     ''' adds arguments to the parser '''
     parser.add_argument('directory_path', help='path to the directory of DTA files')
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('-s', '--shift', action='store', type=float, help='apply a voltage shift to CV data')
-    parser.add_argument('-o', '--outdir', action='store', default='output_data', help='specify the output directory name')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.2')
+    parser.add_argument('-s', '--shift', action='store', type=float,
+                        help='apply a voltage shift to CV data')
+    parser.add_argument('-o', '--outdir', action='store', default='output_data',
+                        help='specify the output directory name')
+    parser.add_argument('-u', '--units', action='store', default='A',
+                        choices=['A', 'mA', 'uA', 'nA'], help='specify the units of the current output')
 
 def main():
     ''' Main Function '''
@@ -114,6 +120,7 @@ def main():
     args = parser.parse_args()
     print('[+] directory_path:', args.directory_path)
     print('[+] output directory:', args.outdir)
+    print('[+] units:', args.units)
     if args.shift is not None:
         print('[+] shift:', sci_not_format(args.shift))
 
