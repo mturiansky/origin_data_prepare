@@ -7,15 +7,27 @@ files for import into OriginLab
 
 from argparse import ArgumentParser
 from os.path import abspath, isdir, isfile, join
-from os import listdir, mkdir, rmdir
+from os import listdir, mkdir
+from shutil import rmtree
 from sys import exc_info
+
+import re
 
 def file_handler(line, filename, output_file):
     '''
     analyzes the input line and filename
     and determines what to write to the output file
     '''
-    pass
+    regex = re.compile(r'(\t[^\t\n\r\f\v]+){3,}\n')
+    if regex.match(line) is None:
+        return
+
+    regex = re.compile(r'\t')
+    if 'CV' in filename:
+        new_line = '\t' + '\t'.join(regex.split(line)[3:5]) + '\n'
+    else:
+        new_line = line
+    print(repr(new_line))
 
 def dispatcher(dirty_path):
     '''
@@ -40,14 +52,14 @@ def dispatcher(dirty_path):
         can_delete = input('[-] Directory exists, should we delete and continue? [Y/n]: ')
         if can_delete == 'Y' or can_delete == 'y':
             print('[*] Deleting old directory')
-            rmdir(output_path)
+            rmtree(output_path)
             mkdir(output_path)
         else:
             raise
     print('[+] Directory created:', output_path)
 
     print('[*] Processing files')
-    for f in filenames:
+    for f in filenames[0:1]:
         with open(join(path, f), 'r') as opened_file:
             with open(join(output_path, f), 'w') as output_file:
                 for line in opened_file:
