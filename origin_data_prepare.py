@@ -6,7 +6,9 @@ files for import into OriginLab
 '''
 
 from argparse import ArgumentParser
-from os.path import abspath, isdir
+from os.path import abspath, isdir, isfile, join
+from os import listdir
+from sys import exc_info
 
 def dispatcher(dirty_path):
     '''
@@ -18,6 +20,15 @@ def dispatcher(dirty_path):
     path = abspath(dirty_path)
     if not isdir(path):
         raise ValueError('Not a directory')
+
+    print('[*] Searching directory')
+    filenames = [f for f in listdir(path) if isfile(join(path, f))]
+    print('[+] Found %d files' % len(filenames))
+
+    print('[*] Processing files')
+    for f in filenames:
+        with open(join(path, f), 'r') as opened_file:
+            print('\t[+] Opened', f)
 
 def setup_parser(parser):
     ''' adds arguments to the parser '''
@@ -32,8 +43,9 @@ def main():
     args = parser.parse_args()
     try:
         dispatcher(args.directory_path)
-    except Exception as e:
-        print('[-]', e.type, e)
+    except Exception as err:
+        exc_type = exc_info()[0]
+        print('[-]', exc_type.__name__ + ':', err)
 
 if __name__ == '__main__':
     main()
