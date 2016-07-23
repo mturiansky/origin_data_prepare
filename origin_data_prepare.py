@@ -24,6 +24,16 @@ def sci_not_format(num):
     a[1] = a[1][:1] + '0' + a[1][1:]
     return 'E'.join(a)
 
+def mod_filename(path, filename):
+    ''' determines the file type and appends to the end '''
+    joined_path = join(path, filename)
+    if 'CV' in filename:
+        return joined_path + 'CV'
+    elif 'CA' in filename:
+        return joined_path + 'CA'
+    else:
+        return joined_path
+
 def file_handler(line, filename, output_file, shift, units):
     '''
     analyzes the input line and filename
@@ -86,13 +96,7 @@ def dispatcher(args):
         print('[*] Current file (' + str(i) + '/' + str(len(filenames)) + '):', f, end='\r')
 
         with open(join(path, f), 'r') as opened_file:
-            if 'CV' in f:
-                output_path_filename = join(output_path, f) + 'CV'
-            elif 'CA' in f:
-                output_path_filename = join(output_path, f) + 'CA'
-            else:
-                output_path_filename = join(output_path, f)
-
+            output_path_filename = mod_filename(output_path, f)
             with open(output_path_filename, 'w') as output_file:
                 for line in opened_file:
                     file_handler(line, f, output_file, args.shift, args.units)
