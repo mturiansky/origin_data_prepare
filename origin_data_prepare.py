@@ -83,7 +83,7 @@ def dispatcher(args):
 
     print('[*] Processing files')
     for i,f in enumerate(filenames):
-        print('[*] Current file (' + i + '/' + len(filenames) + '):', f, end='\r')
+        print('[*] Current file (' + str(i) + '/' + str(len(filenames)) + '):', f, end='\r')
         if 'DTA' not in f:
             continue
 
