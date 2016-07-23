@@ -82,8 +82,8 @@ def dispatcher(args):
     print('[+] Directory created:', output_path)
 
     print('[*] Processing files')
-    for f in filenames:
-        print('[*] Current file:', f, end='\r')
+    for i,f in enumerate(filenames):
+        print('[*] Current file (' + i + '/' + len(filenames) + '):', f, end='\r')
         if 'DTA' not in f:
             continue
 
