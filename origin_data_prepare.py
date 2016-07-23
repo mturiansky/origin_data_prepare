@@ -57,7 +57,6 @@ def dispatcher(args):
     and then selects the appropriate function for
     modifying the data
     '''
-    print('[*] Opening path')
     path = abspath(args.directory_path)
     if not isdir(path):
         raise ValueError('Not a directory')
@@ -72,12 +71,13 @@ def dispatcher(args):
     try:
         mkdir(output_path)
     except FileExistsError:
-        can_delete = input('[-] Directory exists, should we delete and continue? [Y/n]: ')
+        can_delete = input('[-] Directory \'' + output_path + '\' exists, should we delete and continue? [Y/n]: ')
         if can_delete == 'Y' or can_delete == 'y':
             print('[*] Deleting old directory')
             rmtree(output_path)
             mkdir(output_path)
         else:
+            print('[-] Please handle the old directory or use the \'--outdir\' flag to specify a new output path.')
             raise
     print('[+] Directory created:', output_path)
 
@@ -111,6 +111,7 @@ def setup_parser(parser):
                         help='specify the output directory name')
     parser.add_argument('-u', '--units', action='store', default='A',
                         choices=['A', 'mA', 'uA', 'nA'], help='specify the units of the current output')
+    parser.add_argument('-d', '--debug', action='store_true', help='provide extra debugging output')
 
 def main():
     ''' Main Function '''
@@ -118,17 +119,23 @@ def main():
                                         ' DTA files for import into OriginLab.')
     setup_parser(parser)
     args = parser.parse_args()
-    print('[+] directory path:', args.directory_path)
-    print('[+] output directory:', args.outdir)
-    print('[+] units:', args.units)
-    if args.shift is not None:
-        print('[+] shift:', sci_not_format(args.shift))
+
+    if (args.debug):
+        print('[D] directory_path:', args.directory_path)
+        print('[D] output directory:', args.outdir)
+        print('[D] units:', args.units)
+        if args.shift is not None:
+            print('[D] shift:', sci_not_format(args.shift))
+        else:
+            print('[D] shift: None')
 
     try:
         dispatcher(args)
     except Exception as err:
         exc_type = exc_info()[0]
         print('[-]', exc_type.__name__ + ':', err)
+    finally:
+        print('[+] Exitting')
 
 if __name__ == '__main__':
     main()
