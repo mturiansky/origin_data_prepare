@@ -62,7 +62,7 @@ def dispatcher(args):
         raise ValueError('Not a directory')
 
     print('[*] Searching directory')
-    filenames = [f for f in listdir(path) if isfile(join(path, f))]
+    filenames = [f for f in listdir(path) if isfile(join(path, f)) and 'DTA' in f]
     print('[+] Found %d files' % len(filenames))
 
     print('[*] Setting up output directory')
@@ -84,8 +84,6 @@ def dispatcher(args):
     print('[*] Processing files')
     for i,f in enumerate(filenames):
         print('[*] Current file (' + str(i) + '/' + str(len(filenames)) + '):', f, end='\r')
-        if 'DTA' not in f:
-            continue
 
         with open(join(path, f), 'r') as opened_file:
             if 'CV' in f:
