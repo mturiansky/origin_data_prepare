@@ -144,7 +144,7 @@ def dispatcher(args):
     if args.multiprocess:
         tlock = Lock()
         tval = Value('i', 0)
-        pool = Pool(processes=12, initializer=proc_init, initargs=(tval,tlock))
+        pool = Pool(processes=4, initializer=proc_init, initargs=(tval,tlock))
         for f in filenames:
             pool.apply_async(func=file_opener, args=(path, f, output_path, args.shift, args.units, len(filenames)))
         pool.close()
