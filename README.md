@@ -7,13 +7,12 @@ This project is a work in progress. Currently, it takes the directory path, sear
 - LSV and EIS support
 - More robust file handling
 - Simple data analysis (avg, min, max)
-- Multiprocessing support
 
 ### Usage
 
 ```
 usage: origin_data_prepare.py [-h] [-v] [-s SHIFT] [-o OUTDIR]
-                              [-u {A,mA,uA,nA}] [-d]
+                              [-u {A,mA,uA,nA}] [-m] [-d]
                               directory_path
 
 A simple script to prepare Gamry DTA files for import into OriginLab.
@@ -30,5 +29,6 @@ optional arguments:
                         specify the output directory name
   -u {A,mA,uA,nA}, --units {A,mA,uA,nA}
                         specify the units of the current output
+  -m, --multiprocess    enable use of multiprocessing to speed up program
   -d, --debug           provide extra debugging output
 ```

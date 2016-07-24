@@ -8,6 +8,7 @@ files for import into OriginLab
 '''
 
 from argparse import ArgumentParser
+from multiprocessing import Lock, Pool, Value
 from os.path import abspath, isdir, isfile, join
 from os import listdir, mkdir
 from shutil import rmtree
@@ -77,6 +78,38 @@ def file_handler(line, filename, output_file, shift, units):
     new_line = '\t' + '\t'.join(selected) + '\n'
     output_file.write(new_line)
 
+def file_opener(path, filename, output_path, shift, units, num_files):
+    '''
+    opens two files, one for reading, one for writing
+    passes each line to the file_handler
+    having this separate function is necessary for
+    multiprocessing
+    '''
+    with open(join(path, filename), 'r') as opened_file:
+        output_path_filename = mod_filename(output_path, filename)
+        with open(output_path_filename, 'w') as output_file:
+            for line in opened_file:
+                file_handler(line, filename, output_file, shift, units)
+    try:
+        LOCK.acquire()
+        VALUE.value += 1
+        print('\033[K[*] Current File (' + str(VALUE.value) + '/' + str(num_files) + ')', end='\r')
+        stdout.flush()
+        LOCK.release()
+    except:
+        pass
+
+def proc_init(value_init, lock_init):
+    '''
+    globally declares the value and lock for the pool
+    this seems to be the only way to pass these objects
+    to the processes as the objects are not 'pickle-able'
+    '''
+    global VALUE
+    VALUE = value_init
+    global LOCK
+    LOCK = lock_init
+
 def dispatcher(args):
     '''
     looks through the path for DTA files
@@ -108,15 +141,20 @@ def dispatcher(args):
     print('[+] Directory created:', output_path)
 
     print('[*] Processing files')
-    for i,f in enumerate(filenames):
-        print('[*] Current file (' + str(i) + '/' + str(len(filenames)) + '):', f, end='\r')
-
-        with open(join(path, f), 'r') as opened_file:
-            output_path_filename = mod_filename(output_path, f)
-            with open(output_path_filename, 'w') as output_file:
-                for line in opened_file:
-                    file_handler(line, f, output_file, args.shift, args.units)
+    if args.multiprocess:
+        tlock = Lock()
+        tval = Value('i', 0)
+        pool = Pool(processes=4, initializer=proc_init, initargs=(tval,tlock))
+        for f in filenames:
+            pool.apply_async(func=file_opener, args=(path, f, output_path, args.shift, args.units, len(filenames)))
+        pool.close()
+        pool.join()
         stdout.write('\033[K')
+    else:
+        for i,f in enumerate(filenames):
+            print('[*] Current file (' + str(i) + '/' + str(len(filenames)) + '):', f, end='\r')
+            file_opener(path, f, output_path, args.shift, args.units, 0)
+            stdout.write('\033[K')
     print('[+] Processing complete')
 
 def setup_parser(parser):
@@ -129,6 +167,8 @@ def setup_parser(parser):
                         help='specify the output directory name')
     parser.add_argument('-u', '--units', action='store', default='A',
                         choices=['A', 'mA', 'uA', 'nA'], help='specify the units of the current output')
+    parser.add_argument('-m', '--multiprocess', action='store_true',
+                        help='enable use of multiprocessing to speed up program')
     parser.add_argument('-d', '--debug', action='store_true', help='provide extra debugging output')
 
 def main():
@@ -146,6 +186,7 @@ def main():
             print('[D] shift:', sci_not_format(args.shift))
         else:
             print('[D] shift: None')
+        print('[D] multiprocess:', args.multiprocess)
 
     try:
         dispatcher(args)
