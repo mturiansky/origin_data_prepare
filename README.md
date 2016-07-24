@@ -7,7 +7,6 @@ This project is a work in progress. Currently, it takes the directory path, sear
 - LSV and EIS support
 - More robust file handling
 - Simple data analysis (avg, min, max)
-- Multiprocessing support
 
 ### Usage
 
