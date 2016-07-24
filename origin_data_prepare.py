@@ -8,7 +8,7 @@ files for import into OriginLab
 '''
 
 from argparse import ArgumentParser
-from multiprocessing import Pool
+from multiprocessing import Lock, Pool, Value
 from os.path import abspath, isdir, isfile, join
 from os import listdir, mkdir
 from shutil import rmtree
@@ -78,7 +78,7 @@ def file_handler(line, filename, output_file, shift, units):
     new_line = '\t' + '\t'.join(selected) + '\n'
     output_file.write(new_line)
 
-def file_opener(path, filename, output_path, shift, units):
+def file_opener(path, filename, output_path, shift, units, num_files):
     '''
     opens two files, one for reading, one for writing
     passes each line to the file_handler
@@ -90,6 +90,25 @@ def file_opener(path, filename, output_path, shift, units):
         with open(output_path_filename, 'w') as output_file:
             for line in opened_file:
                 file_handler(line, filename, output_file, shift, units)
+    try:
+        LOCK.acquire()
+        VALUE.value += 1
+        print('\033[K[*] Current File (' + str(VALUE.value) + '/' + str(num_files) + ')', end='\r')
+        stdout.flush()
+        LOCK.release()
+    except:
+        pass
+
+def proc_init(value_init, lock_init):
+    '''
+    globally declares the value and lock for the pool
+    this seems to be the only way to pass these objects
+    to the processes as the objects are not 'pickle-able'
+    '''
+    global VALUE
+    VALUE = value_init
+    global LOCK
+    LOCK = lock_init
 
 def dispatcher(args):
     '''
@@ -123,15 +142,18 @@ def dispatcher(args):
 
     print('[*] Processing files')
     if args.multiprocess:
-        pool = Pool(processes=4)
+        tlock = Lock()
+        tval = Value('i', 0)
+        pool = Pool(processes=12, initializer=proc_init, initargs=(tval,tlock))
         for f in filenames:
-            pool.apply_async(func=file_opener, args=(path, f, output_path, args.shift, args.units))
+            pool.apply_async(func=file_opener, args=(path, f, output_path, args.shift, args.units, len(filenames)))
         pool.close()
         pool.join()
+        stdout.write('\033[K')
     else:
         for i,f in enumerate(filenames):
             print('[*] Current file (' + str(i) + '/' + str(len(filenames)) + '):', f, end='\r')
-            file_opener(path, f, output_path, args.shift, args.units)
+            file_opener(path, f, output_path, args.shift, args.units, 0)
             stdout.write('\033[K')
     print('[+] Processing complete')
 
