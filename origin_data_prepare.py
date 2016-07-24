@@ -39,26 +39,42 @@ def file_handler(line, filename, output_file, shift, units):
     analyzes the input line and filename
     and determines what to write to the output file
     '''
+    # skip lines that don't match pattern
     regex = re.compile(r'(\t[^\t\n\r\f\v]+){8,}\n')
     if regex.match(line) is None:
         return
 
+    # split lines and determine what to keep
     regex = re.compile(r'\t')
-    if 'CV' in filename or 'CA' in filename:
-        split_line = regex.split(line)[3:5]
-        try:
-            split_line[1] = sci_not_format(float(split_line[1])*UNIT_CONV[units])
-        except ValueError:
-            if split_line[0] == 'Vf':
-                split_line = ['Voltage', 'Current']
+    split_line = regex.split(line)
+    if 'CV' in filename:
+        selected = split_line[3:5]
+    elif 'CA' in filename:
+        selected = split_line[2:5:2]
+    else:
+        selected = split_line
+
+    try:
+        if 'CV' in filename:
+            selected[1] = sci_not_format(float(selected[1])*UNIT_CONV[units])
+            if shift is not None:
+                selected[0] = sci_not_format(float(selected[0])+shift)
+        elif 'CA' in filename:
+            selected[0] = selected[0] # need to figure out time scaling
+            selected[1] = sci_not_format(float(selected[1])*UNIT_CONV[units])
+    except ValueError:
+        if 'CV' in filename:
+            if selected[0] == 'Vf':
+                selected = ['Voltage', 'Current']
             else:
-                split_line = ['V', units]
-    if shift is not None and 'CV' in filename:
-        try:
-            split_line[0] = sci_not_format(float(split_line[0])+shift)
-        except ValueError:
-            pass
-    new_line = '\t' + '\t'.join(split_line) + '\n'
+                selected = ['V', units]
+        elif 'CA' in filename:
+            if selected[0] == 'T':
+                selected = ['Time', 'Current']
+            else:
+                selected = ['s', units]
+
+    new_line = '\t' + '\t'.join(selected) + '\n'
     output_file.write(new_line)
 
 def dispatcher(args):
