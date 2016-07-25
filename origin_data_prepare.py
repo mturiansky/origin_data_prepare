@@ -130,13 +130,15 @@ def dispatcher(args):
     try:
         mkdir(output_path)
     except FileExistsError:
-        can_delete = input('[-] Directory \'' + output_path + '\' exists, should we delete and continue? [Y/n]: ')
+        can_delete = input('[-] Directory \'' + output_path +
+                           '\' exists, should we delete and continue? [Y/n]: ')
         if can_delete == 'Y' or can_delete == 'y':
             print('[*] Deleting old directory')
             rmtree(output_path)
             mkdir(output_path)
         else:
-            print('[-] Please handle the old directory or use the \'--outdir\' flag to specify a new output path.')
+            print('[-] Please handle the old directory or use '
+                  'the \'--outdir\' flag to specify a new output path.')
             raise
     print('[+] Directory created:', output_path)
 
@@ -144,14 +146,15 @@ def dispatcher(args):
     if args.multiprocess:
         tlock = Lock()
         tval = Value('i', 0)
-        pool = Pool(processes=4, initializer=proc_init, initargs=(tval,tlock))
+        pool = Pool(processes=4, initializer=proc_init, initargs=(tval, tlock))
         for f in filenames:
-            pool.apply_async(func=file_opener, args=(path, f, output_path, args.shift, args.units, len(filenames)))
+            pool.apply_async(func=file_opener,
+                             args=(path, f, output_path, args.shift, args.units, len(filenames)))
         pool.close()
         pool.join()
         stdout.write('\033[K')
     else:
-        for i,f in enumerate(filenames):
+        for i, f in enumerate(filenames):
             print('[*] Current file (' + str(i) + '/' + str(len(filenames)) + '):', f, end='\r')
             file_opener(path, f, output_path, args.shift, args.units, 0)
             stdout.write('\033[K')
@@ -166,7 +169,8 @@ def setup_parser(parser):
     parser.add_argument('-o', '--outdir', action='store', default='output_data',
                         help='specify the output directory name')
     parser.add_argument('-u', '--units', action='store', default='A',
-                        choices=['A', 'mA', 'uA', 'nA'], help='specify the units of the current output')
+                        choices=['A', 'mA', 'uA', 'nA'],
+                        help='specify the units of the current output')
     parser.add_argument('-m', '--multiprocess', action='store_true',
                         help='enable use of multiprocessing to speed up program')
     parser.add_argument('-d', '--debug', action='store_true', help='provide extra debugging output')
@@ -178,7 +182,7 @@ def main():
     setup_parser(parser)
     args = parser.parse_args()
 
-    if (args.debug):
+    if args.debug:
         print('[D] directory_path:', args.directory_path)
         print('[D] output directory:', args.outdir)
         print('[D] units:', args.units)
